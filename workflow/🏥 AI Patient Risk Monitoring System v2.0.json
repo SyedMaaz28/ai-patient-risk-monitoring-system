@@ -1,0 +1,1466 @@
+{
+  "name": "🏥 AI Patient Risk Monitoring System v2.0",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 🏥  AI-powered Clinical Triage & Patient Risk Monitoring System\n> **Production-Grade** · Real-Time Triage · Multi-Channel Alerts · Audit Logging · Global Error Handling · Data Payload with google sheet Integration",
+        "height": 110,
+        "width": 5200,
+        "color": 5
+      },
+      "id": "3a5937db-0491-49b3-86e8-1824356aa96d",
+      "name": "🏥 TITLE BANNER",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📥 Zone 1 — Patient Data Ingestion\n**Handles:** Webhook intake · Rate limiting · Deduplication · Data validation & sanitisation\n\n- `POST /health-leads` receives patient payload\n- Rate-limit check: max **5 req / patient / 10 min**\n- Validates required fields · normalises data types\n- Generates unique `processingId`",
+        "height": 740,
+        "width": 788,
+        "color": 4
+      },
+      "id": "02d6eb01-02ed-4e0d-82c0-cb3e632d1427",
+      "name": "📥 ZONE 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        512,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 Zone 2 — AI Risk Assessment Engine\n**Handles:** Clinical context enrichment · Prompt engineering · Groq chat inference · Confidence validation\n\n- Adds on-call physician, dept contacts, escalation chain\n- Structured clinical prompt with vitals + symptoms\n- **Groq- llama-3.1-8b-instant** — 3 retries, 2 s back-off, 45 s timeout\n- Confidence gate: < 65% → manual review path",
+        "height": 740,
+        "width": 1604,
+        "color": 5
+      },
+      "id": "9a6ce2de-bc33-4c2c-b36a-cfe9277802fc",
+      "name": "🤖 ZONE 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔀 Zone 3 — Risk Routing\nRoutes by `riskLevel`:\n`CRITICAL` · `HIGH` · `MEDIUM` · `LOW` · `LOW_CONF` · `ERROR`",
+        "height": 740,
+        "width": 380,
+        "color": 2
+      },
+      "id": "a140ac13-f0af-400c-a35a-cbaff2e959c8",
+      "name": "🔀 ZONE 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ Zone 4 — Risk Handlers\nFormats structured alert\npayload for each risk level.\n\nSets `emailSubject`, `emailBody`,\n`slackMessage`, `requiresEmail`,\n`requiresSlack`, `priority`.",
+        "height": 1250,
+        "width": 376,
+        "color": 3
+      },
+      "id": "18f2031a-7350-485f-9c98-4cc066d99290",
+      "name": "⚠️ ZONE 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3936,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📢 Zone 5 — Multi-Channel Alert Delivery\n**Email** via Gmail  ·  **Slack** webhook for CRITICAL\n\nAll delivery nodes: `continueOnFail = true`\nso downstream audit always runs.",
+        "height": 1250,
+        "width": 580
+      },
+      "id": "bc3b7d23-f70c-4826-8859-939b817e6274",
+      "name": "📢 ZONE 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4560,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Zone 6 — Audit, EHR Update & Response\n**Handles:** Structured audit record ·Google sheet write-back · Webhook response\n\n- Logs every assessment to central audit store\n- PUT to EHR API (`continueOnFail = true`)\n- Returns structured JSON to caller",
+        "height": 740,
+        "width": 1076,
+        "color": 4
+      },
+      "id": "8a3f5e8a-d1d6-49e6-8bcb-47f1613b0b05",
+      "name": "📊 ZONE 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5200,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🚨 Zone 7 — Global Error Handler\nCatches **any uncaught node failure** across the entire workflow.\nFormats error report · Notifies admin via email · Logs failure context.",
+        "height": 300,
+        "width": 1130,
+        "color": 3
+      },
+      "id": "f571bea3-893e-4e21-8c2e-475de6dfaaf3",
+      "name": "🚨 ZONE 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        512,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📋 Risk Level Legend\n\n| Level | Score | Action |\n|-------|-------|--------|\n| 🔴 CRITICAL | 80-100 | Immediate intervention |\n| 🟠 HIGH | 60-79 | Urgent review < 2h |\n| 🟡 MEDIUM | 40-59 | Review within 4-8h |\n| 🟢 LOW | 0-39 | Standard monitoring |\n| 🔵 LOW CONF | any | Confidence < 65% |\n| ⚫ ERROR | — | AI parse failure |\n\n**Confidence Gate:** < 0.65 → LOW_CONF path",
+        "height": 480,
+        "width": 370,
+        "color": 5
+      },
+      "id": "9b7f6fd5-66c5-4bc2-a0be-426659d4bdaa",
+      "name": "📋 Risk Legend",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6528,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ Configuration Required\n\n**Before activating, set up:**\n\n1. **Ollama** — HTTP Header Auth credential\n   Key: `Authorization`, Value: `APIKEY-…`\n\n2. **Gmail** — OAuth2 credential\n\n3. **Slack** — Update Slack webhook URL in\n   `Send CRITICAL Slack Alert` node\n\n4. **Google Sheet ** — Update Google Sheet ID in\n   `Update & Append Data` node\n\n5. **Alert email** — Update `ops-team@hospital.com`\n   in `Send Error Alert Email`",
+        "height": 430,
+        "width": 370,
+        "color": 2
+      },
+      "id": "ee9db3b9-a9cd-4f38-ad56-f23f2728e882",
+      "name": "⚙️ Config Required",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6528,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📄 Workflow Metadata\n\n- **Version:** 1.0.0\n- **Last Updated:** 2026-07-27\n- **AI Model:** Groq (llama-3.1-8b-instant)\n- **Webhook Path:** `/health-leads`\n- **Rate Limit:** 5 req / patient / 10 min\n- **Retry Policy:** 3 attempts, 2 s back-off\n- **Confidence Threshold:** 65%\n- **Error Escalation:** ops-team@hospital.com",
+        "height": 300,
+        "width": 370,
+        "color": 5
+      },
+      "id": "294432bd-714b-4842-8fc8-14c5c43cf7ce",
+      "name": "📄 Workflow Metadata",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6528,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "health-leads",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "0ef3cab1-f36e-46dc-aaa3-f6891c99b82c",
+      "name": "Patient Data Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        704,
+        608
+      ],
+      "webhookId": "67c0d85e-d2a1-426e-a0c3-605b304da3d1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "rate-cond-1",
+              "leftValue": "={{ $json.allowed }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": "true"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dee84697-88c1-4ac9-88fe-227f14d32e14",
+      "name": "Rate Limit & Dedup Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        608
+      ],
+      "notesInFlow": true,
+      "notes": "TRUE → continue | FALSE → reject duplicate / rate-limit"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b160a283-a1dc-4610-80de-9a6b21f7d178",
+      "name": "Set Rate Limited Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1168,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 429
+        }
+      },
+      "id": "28f4233a-1975-46f9-a6ff-7a5d24c02004",
+      "name": "Respond Rate Limited",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════╗\n// ║   VALIDATE & SANITIZE — Zone 1              ║\n// ╚══════════════════════════════════════════════╝\ntry {\n  // Support both direct JSON and webhook body formats\n  const raw = $input.first().json;\n  const d = raw.body || raw;\n\n  // ── Required field check ──\n  const required = ['patientId', 'patientName', 'age'];\n  const missing = required.filter(f => d[f] === undefined || d[f] === null || d[f] === '');\n  if (missing.length > 0) {\n    throw new Error('VALIDATION_ERROR: Missing required fields: ' + missing.join(', '));\n  }\n\n  // ── Age validation ──\n  const age = Number(d.age);\n  if (isNaN(age) || age < 0 || age > 150) {\n    throw new Error('VALIDATION_ERROR: Age must be a number between 0 and 150. Got: ' + d.age);\n  }\n\n  // ── Patient ID format ──\n  const patientId = String(d.patientId).trim();\n  if (patientId.length < 2 || patientId.length > 50) {\n    throw new Error('VALIDATION_ERROR: patientId must be 2-50 characters');\n  }\n\n  // ── Generate processing ID ──\n  const processingId = 'PR-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();\n\n  // ── Sanitize vitals ──\n  const vitals = {\n    heartRate:       d.vitals?.heartRate       ?? null,\n    bloodPressure:   d.vitals?.bloodPressure   ?? null,\n    oxygenLevel:     d.vitals?.oxygenLevel     ?? null,\n    temperature:     d.vitals?.temperature     ?? null,\n    respiratoryRate: d.vitals?.respiratoryRate ?? null,\n    glucoseLevel:    d.vitals?.glucoseLevel    ?? null\n  };\n\n  return [{\n    json: {\n      patientId,\n      patientName:        String(d.patientName).trim(),\n      age,\n      gender:             d.gender            || 'Not Specified',\n      ward:               d.ward              || 'General Ward',\n      attendingDoctor:    d.attendingDoctor   || 'On-Call Physician',\n      vitals,\n      symptoms:           Array.isArray(d.symptoms)            ? d.symptoms            : [],\n      medicalHistory:     Array.isArray(d.medicalHistory)      ? d.medicalHistory      : [],\n      currentMedications: Array.isArray(d.currentMedications)  ? d.currentMedications  : [],\n      labResults:         d.labResults || {},\n      notifyEmails:       d.notifyEmails || d.notifyEmail || 'alerts@hospital.com',\n      processingId,\n      receivedAt:         new Date().toISOString(),\n      workflowVersion:    '2.0.0',\n      validationStatus:   'PASSED'\n    }\n  }];\n} catch (err) {\n  // Re-throw with structured prefix so error handler can categorise\n  const msg = err.message.startsWith('VALIDATION_ERROR:') ? err.message : 'VALIDATION_ERROR: ' + err.message;\n  throw new Error(msg);\n}"
+      },
+      "id": "4ee1b10a-1afc-4066-b917-765bc5f4f4cf",
+      "name": "Validate and Sanitize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════╗\n// ║   ENRICH WITH CLINICAL CONTEXT — Zone 2     ║\n// ╚══════════════════════════════════════════════╝\nconst d = $input.first().json;\n\n// Ward-to-department escalation map\nconst WARD_MAP = {\n  'ICU':            { dept: 'Intensive Care',         escalationLevel: 1, primaryContact: 'icu-team@hospital.com' },\n  'CCU':            { dept: 'Cardiac Care',            escalationLevel: 1, primaryContact: 'ccu-team@hospital.com' },\n  'Emergency':      { dept: 'Emergency Medicine',      escalationLevel: 1, primaryContact: 'er-team@hospital.com' },\n  'Cardiology':     { dept: 'Cardiology',              escalationLevel: 2, primaryContact: 'cardiology@hospital.com' },\n  'Neurology':      { dept: 'Neurology',               escalationLevel: 2, primaryContact: 'neuro@hospital.com' },\n  'General Ward':   { dept: 'General Medicine',        escalationLevel: 3, primaryContact: 'general@hospital.com' },\n  'Surgical':       { dept: 'Surgery',                 escalationLevel: 2, primaryContact: 'surgery@hospital.com' },\n  'Pediatric':      { dept: 'Pediatrics',              escalationLevel: 2, primaryContact: 'peds@hospital.com' },\n};\n\nconst wardInfo = WARD_MAP[d.ward] || { dept: 'General Medicine', escalationLevel: 3, primaryContact: 'general@hospital.com' };\n\n// Risk-factor flags from medical history\nconst HIGH_RISK_CONDITIONS = ['diabetes', 'hypertension', 'heart disease', 'COPD', 'renal failure', 'cancer', 'immunocompromised'];\nconst flaggedConditions = (d.medicalHistory || []).filter(h =>\n  HIGH_RISK_CONDITIONS.some(c => h.toLowerCase().includes(c.toLowerCase()))\n);\n\n// Age-based risk multiplier\nlet ageRiskCategory = 'Standard';\nif (d.age >= 75) ageRiskCategory = 'Geriatric High Risk';\nelse if (d.age >= 65) ageRiskCategory = 'Elderly';\nelse if (d.age <= 12) ageRiskCategory = 'Pediatric';\n\n// Critical vital thresholds check\nconst vitals = d.vitals || {};\nconst criticalFlags = [];\nif (vitals.oxygenLevel && vitals.oxygenLevel < 90)  criticalFlags.push('SpO2 critically low (' + vitals.oxygenLevel + '%)');\nif (vitals.heartRate   && vitals.heartRate > 130)   criticalFlags.push('Tachycardia (' + vitals.heartRate + ' bpm)');\nif (vitals.heartRate   && vitals.heartRate < 40)    criticalFlags.push('Bradycardia (' + vitals.heartRate + ' bpm)');\nif (vitals.temperature && vitals.temperature > 39.5) criticalFlags.push('High fever (' + vitals.temperature + '°C)');\nif (vitals.temperature && vitals.temperature < 35.0) criticalFlags.push('Hypothermia (' + vitals.temperature + '°C)');\n\nreturn [{\n  json: {\n    ...d,\n    // Clinical enrichment\n    departmentInfo:     wardInfo,\n    escalationLevel:    wardInfo.escalationLevel,\n    departmentContact:  wardInfo.primaryContact,\n    flaggedConditions,\n    ageRiskCategory,\n    criticalVitalFlags: criticalFlags,\n    preAssessmentRisk:  criticalFlags.length >= 2 ? 'HIGH_SUSPICION' : (criticalFlags.length === 1 ? 'ELEVATED' : 'NORMAL'),\n    // Merge notification targets\n    notifyEmails: [d.notifyEmails, wardInfo.primaryContact].filter(Boolean).join(', '),\n    enrichedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "2e7255d7-fef0-4d2e-a851-a3c809e23444",
+      "name": "Enrich with Clinical Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════╗\n// ║   BUILD AI PROMPT — Zone 2                  ║\n// ╚══════════════════════════════════════════════╝\nconst d = $input.first().json;\n\nconst vitalsLines = Object.entries(d.vitals || {})\n  .filter(([k, v]) => v !== null)\n  .map(([k, v]) => `  - ${k}: ${v}`)\n  .join('\\n') || '  - No vitals recorded';\n\nconst symptomsLines = (d.symptoms || []).length\n  ? d.symptoms.map(s => `  - ${s}`).join('\\n')\n  : '  - None reported';\n\nconst historyLines = (d.medicalHistory || []).length\n  ? d.medicalHistory.map(h => `  - ${h}`).join('\\n')\n  : '  - None documented';\n\nconst medsLines = (d.currentMedications || []).length\n  ? d.currentMedications.map(m => `  - ${m}`).join('\\n')\n  : '  - None listed';\n\nconst flaggedLines = (d.criticalVitalFlags || []).length\n  ? d.criticalVitalFlags.map(f => `  ⚠️ ${f}`).join('\\n')\n  : '  - None identified';\n\nconst prompt = `You are a clinical AI risk assessment engine for a hospital monitoring system. You are an experienced Emergency Medicine physician performing hospital triage. Your job is to classify patients according to internationally accepted emergency triage principles.Be conservative.Never overestimate risk. Never underestimate obvious emergencies. Healthy patients should always be LOW.Only assign CRITICAL when immediate medical intervention is clearly required and respond with ONLY valid JSON — no explanation, no markdown, no preamble.\n\n=== PATIENT DATA ===\nPatient ID:       ${d.patientId}\nName:             ${d.patientName}\nAge / Gender:     ${d.age} yrs / ${d.gender}\nWard:             ${d.ward} (${d.departmentInfo?.dept || 'N/A'})\nAttending:        ${d.attendingDoctor}\nAge Risk:         ${d.ageRiskCategory}\nPre-Assessment:   ${d.preAssessmentRisk}\n\n=== VITALS ===\n${vitalsLines}\n\n=== CRITICAL VITAL FLAGS ===\n${flaggedLines}\n\n=== SYMPTOMS ===\n${symptomsLines}\n\n=== MEDICAL HISTORY ===\n${historyLines}\n\n=== CURRENT MEDICATIONS ===\n${medsLines}\n\n=== CLINICAL TRIAGE RULES ===\n\nYou MUST calculate the patient's risk based on the following clinical rules.\n\nAssign the HIGHEST applicable risk level.\n\nLOW (0-39)\nCriteria:\n- Heart Rate: 60-100 bpm\n- Oxygen Level: >=95%\n- Temperature: <100.4°F\n- Blood Pressure: <140/90\n- Respiratory Rate: 12-20\n- Mild or no symptoms\n- Patient conscious and stable\n\nMEDIUM (40-59)\nCriteria:\n- Mild fever\n- Mild hypertension\n- Oxygen 92-94%\n- Heart Rate 100-120\n- Moderate symptoms\n- Stable but requires observation\n\nHIGH (60-79)\nCriteria:\n- Chest pain\n- Severe hypertension (>170 systolic)\n- Oxygen 85-91%\n- Heart Rate >120\n- Temperature >102°F\n- Multiple abnormal vitals\n- Requires urgent medical review\n\nCRITICAL (80-100)\nCriteria:\n- Oxygen <85%\n- Loss of consciousness\n- Severe respiratory distress\n- Severe chest pain\n- Cardiac arrest\n- Sepsis\n- Multiple life-threatening vital abnormalities\n- Immediate intervention required\n\n\nIMPORTANT RULES\n\n1. Base your decision on the patient's vitals, symptoms and medical history.\n\n2. Do NOT assign CRITICAL unless the patient clearly meets CRITICAL criteria.\n\n3. Do NOT inflate the score.\n\n4. Healthy patients MUST ALWAYS receive LOW risk.\n\nDo not classify a patient as MEDIUM unless there is at least one clinically significant abnormal vital sign OR multiple moderate symptoms.\n\nNever classify a patient as HIGH or CRITICAL based only on mild symptoms.\n\n5. Return ONLY valid JSON.\n\n6. riskLevel and riskScore MUST match.\n\nLOW = 0-39\nMEDIUM = 40-59\nHIGH = 60-79\nCRITICAL = 80-100\n\nVERY IMPORTANT\n\nDo not increase the risk level simply because symptoms exist.\n\nA single mild symptom such as:\n\n- Mild headache\n- Mild cough\n- Mild fatigue\n- Mild body pain\n\nwith completely normal vital signs MUST remain LOW risk.\n\nThe patient's vital signs are more important than the presence of one mild symptom.\n\n=== REQUIRED JSON RESPONSE FORMAT ===\n{\n  \"riskLevel\": \"CRITICAL|HIGH|MEDIUM|LOW\",\n  \"riskScore\": <integer 0-100>,\n  \"confidence\": <float 0.00-1.00>,\n  \"primaryConcerns\": [\"<concern 1>\", ...],\n  \"clinicalFindings\": [\"<finding 1>\", ...],\n  \"immediateActions\": [\"<action 1>\", ...],\n  \"monitoringParameters\": [\"<param 1>\", ...],\n  \"estimatedTimeToIntervention\": \"<time string>\",\n  \"clinicalNarrative\": \"<2-3 sentence summary>\",\n  \"flaggedVitals\": [\"<vital name>\", ...],\n  \"differentialConsiderations\": [\"<dx 1>\", ...],\n  \"recommendedSpecialties\": [\"<specialty>\", ...],\n  \"medicationAlerts\": [\"<alert>\", ...]\n}`;\n\nreturn [{ json: { ...d, aiPrompt: prompt } }];"
+      },
+      "id": "3f266149-1767-4e4e-b3e7-088286fdfb3b",
+      "name": "Build AI Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "conf-cond",
+              "leftValue": "={{Number ($json.output.confidence) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": "={{0.65}}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "79367b78-9faf-46fb-9b00-b3e2c9f78eef",
+      "name": "Confidence Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3344,
+        592
+      ],
+      "notesInFlow": true,
+      "notes": "> 0.65 → Risk Router | <= 0.65 → LOW_CONF handler"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nconst riskScore = d.output?.riskScore || 0;\nconst confidence = Math.round((d.output?.confidence || 0) * 100);\n\nconst emailSubject =\n`🚨 CRITICAL RISK | ${d.patientId} - ${d.patientName} | Score ${riskScore}/100`;\n\nconst emailHtml = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Critical Patient Alert</title>\n</head>\n\n<body style=\"margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f9;padding:20px;\">\n<tr>\n<td align=\"center\">\n\n<table width=\"700\" cellpadding=\"0\" cellspacing=\"0\"\nstyle=\"max-width:700px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;\">\n\n    <!-- Header -->\n    <tr>\n        <td style=\"background:#dc2626;padding:30px;text-align:center;color:#ffffff;\">\n            <h1 style=\"margin:0;font-size:30px;\">🚨 CRITICAL PATIENT ALERT</h1>\n            <p style=\"margin-top:10px;font-size:15px;\">\n                Immediate Clinical Intervention Required\n            </p>\n        </td>\n    </tr>\n\n    <!-- Patient Information -->\n    <tr>\n        <td style=\"padding:25px;\">\n            <h2 style=\"margin-top:0;color:#111827;border-bottom:2px solid #ef4444;padding-bottom:8px;\">\n                Patient Information\n            </h2>\n\n            <table width=\"100%\" cellpadding=\"10\" cellspacing=\"0\" style=\"border-collapse:collapse;\">\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Patient Name</strong></td>\n                    <td>${d.patientName || 'N/A'}</td>\n                </tr>\n\n                <tr>\n                    <td><strong>Patient ID</strong></td>\n                    <td>${d.patientId || 'N/A'}</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Age / Gender</strong></td>\n                    <td>${d.age || 'N/A'} Years / ${d.gender || 'N/A'}</td>\n                </tr>\n\n                <tr>\n                    <td><strong>Ward</strong></td>\n                    <td>${d.ward || 'N/A'}</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Department</strong></td>\n                    <td>${d.departmentInfo?.dept || 'N/A'}</td>\n                </tr>\n\n                <tr>\n                    <td><strong>Attending Doctor</strong></td>\n                    <td>${d.attendingDoctor || 'N/A'}</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Risk Level</strong></td>\n                    <td>\n                        <span style=\"background:#dc2626;color:#ffffff;padding:6px 12px;border-radius:6px;\">\n                            ${d.output?.riskLevel || 'CRITICAL'}\n                        </span>\n                    </td>\n                </tr>\n\n                <tr>\n                    <td><strong>Risk Score</strong></td>\n                    <td>${riskScore}/100</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Confidence</strong></td>\n                    <td>${confidence}%</td>\n                </tr>\n            </table>\n        </td>\n    </tr>\n\n    <!-- Critical Vitals -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#dc2626;\">🔴 Critical Vital Flags</h2>\n\n            <ul>\n                ${(d.criticalVitalFlags || [])\n                    .map(v => `<li>${v}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Primary Concerns -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">⚠️ Primary Concerns</h2>\n\n            <ul>\n                ${(d.output?.primaryConcerns || [])\n                    .map(c => `<li>${c}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Immediate Actions -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">🚑 Immediate Actions Required</h2>\n\n            <ol>\n                ${(d.output?.immediateActions || [])\n                    .map(a => `<li>${a}</li>`)\n                    .join('')}\n            </ol>\n        </td>\n    </tr>\n\n    <!-- Clinical Findings -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">📋 Clinical Findings</h2>\n\n            <ul>\n                ${(d.output?.clinicalFindings || [])\n                    .map(f => `<li>${f}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Monitoring Parameters -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">📈 Monitoring Parameters</h2>\n\n            <ul>\n                ${(d.output?.monitoringParameters || [])\n                    .map(m => `<li>${m}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Flagged Vitals -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">🩺 Flagged Vitals</h2>\n\n            <ul>\n                ${(d.output?.flaggedVitals || [])\n                    .map(v => `<li>${v}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Clinical Narrative -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">📝 Clinical Narrative</h2>\n\n            <div style=\"\n                background:#f9fafb;\n                border-left:4px solid #dc2626;\n                padding:15px;\n                line-height:1.6;\n            \">\n                ${d.output?.clinicalNarrative || 'No narrative available'}\n            </div>\n        </td>\n    </tr>\n\n    <!-- Differential Diagnoses -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">🔍 Differential Considerations</h2>\n\n            <ul>\n                ${(d.output?.differentialConsiderations || [])\n                    .map(dx => `<li>${dx}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Recommended Specialists -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#111827;\">👨‍⚕️ Recommended Specialties</h2>\n\n            <ul>\n                ${(d.output?.recommendedSpecialties || [])\n                    .map(s => `<li>${s}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Footer -->\n    <tr>\n        <td style=\"background:#111827;color:#ffffff;padding:25px;\">\n            <h3 style=\"margin-top:0;\">Alert Metadata</h3>\n\n            <p><strong>Processing ID:</strong> ${d.processingId}</p>\n            <p><strong>Assessment Time:</strong> ${d.receivedAt}</p>\n            <p><strong>Intervention Window:</strong> ${d.output?.estimatedTimeToIntervention || 'Immediate'}</p>\n\n            <hr style=\"border:none;border-top:1px solid #374151;\">\n\n            <p style=\"font-size:12px;color:#d1d5db;\">\n                This alert was automatically generated by the AI Clinical Risk Monitoring System.\n                Immediate medical review is strongly recommended.\n            </p>\n        </td>\n    </tr>\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>\n`;\n\nconst slackMessage = `\n🚨 *CRITICAL PATIENT ALERT*\n\n*Patient:* ${d.patientName}\n*Patient ID:* ${d.patientId}\n*Age/Gender:* ${d.age} yrs / ${d.gender}\n*Ward:* ${d.ward}\n*Doctor:* ${d.attendingDoctor}\n\n🔴 *Risk Level:* ${d.output?.riskLevel || 'CRITICAL'}\n📊 *Risk Score:* ${riskScore}/100\n🎯 *Confidence:* ${confidence}%\n\n⚠️ *Primary Concerns*\n${(d.output?.primaryConcerns || [])\n  .map(c => `• ${c}`)\n  .join('\\n')}\n\n🚑 *Immediate Actions*\n${(d.output?.immediateActions || [])\n  .slice(0, 3)\n  .map((a, i) => `${i + 1}. ${a}`)\n  .join('\\n')}\n\n🩺 *Critical Vitals*\n${(d.criticalVitalFlags || [])\n  .map(v => `• ${v}`)\n  .join('\\n')}\n\n📝 *Clinical Summary*\n${d.output?.clinicalNarrative || 'No summary available'}\n\n⏱ *Intervention Window:* ${d.output?.estimatedTimeToIntervention || 'Immediate'}\n\n🆔 *Processing ID:* ${d.processingId}\n`;\n\nreturn [{\n  json: {\n    ...d,\n    emailSubject,\n    emailHtml,\n    slackMessage,\n    alertType: 'CRITICAL',\n    priority: 1,\n    requiresEmail: true,\n    requiresSlack: true,\n    slaMinutes: 15\n  }\n}];"
+      },
+      "id": "0279eb86-1f3c-404e-b546-c078ccc8106d",
+      "name": "Handle CRITICAL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nconst riskScore = d.output?.riskScore || 0;\nconst confidence = Math.round((d.output?.confidence || 0) * 100);\n\nconst emailSubject =\n`🟠 HIGH RISK | ${d.patientId} - ${d.patientName} | Rapid Clinical Review Required`;\n\nconst emailHtml = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>High Risk Patient Alert</title>\n</head>\n\n<body style=\"margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f9;padding:20px;\">\n<tr>\n<td align=\"center\">\n\n<table width=\"700\" cellpadding=\"0\" cellspacing=\"0\"\nstyle=\"max-width:700px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;\">\n\n    <!-- Header -->\n    <tr>\n        <td style=\"background:#f59e0b;padding:30px;text-align:center;color:#ffffff;\">\n            <h1 style=\"margin:0;font-size:30px;\">🟠 HIGH RISK PATIENT ALERT</h1>\n            <p style=\"margin-top:10px;font-size:15px;\">\n                Rapid Clinical Review Recommended\n            </p>\n        </td>\n    </tr>\n\n    <!-- Risk Summary -->\n    <tr>\n        <td style=\"padding:25px;\">\n            <table width=\"100%\" cellpadding=\"10\" cellspacing=\"0\">\n                <tr>\n                    <td width=\"35%\"><strong>Patient Name</strong></td>\n                    <td>${d.patientName}</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Patient ID</strong></td>\n                    <td>${d.patientId}</td>\n                </tr>\n\n                <tr>\n                    <td><strong>Age / Gender</strong></td>\n                    <td>${d.age} Years / ${d.gender}</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Ward</strong></td>\n                    <td>${d.ward}</td>\n                </tr>\n\n                <tr>\n                    <td><strong>Attending Doctor</strong></td>\n                    <td>${d.attendingDoctor}</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Risk Level</strong></td>\n                    <td>\n                        <span style=\"background:#f59e0b;color:#fff;padding:6px 12px;border-radius:5px;\">\n                            HIGH\n                        </span>\n                    </td>\n                </tr>\n\n                <tr>\n                    <td><strong>Risk Score</strong></td>\n                    <td>${riskScore}/100</td>\n                </tr>\n\n                <tr style=\"background:#f9fafb;\">\n                    <td><strong>Confidence</strong></td>\n                    <td>${confidence}%</td>\n                </tr>\n            </table>\n        </td>\n    </tr>\n\n    <!-- Primary Concerns -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#92400e;\">⚠️ Primary Concerns</h2>\n\n            <ul>\n                ${(d.output?.primaryConcerns || [])\n                    .map(item => `<li>${item}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Clinical Findings -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#92400e;\">📋 Clinical Findings</h2>\n\n            <ul>\n                ${(d.output?.clinicalFindings || [])\n                    .map(item => `<li>${item}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Recommended Actions -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#92400e;\">🩺 Recommended Actions</h2>\n\n            <ol>\n                ${(d.output?.immediateActions || [])\n                    .map(item => `<li>${item}</li>`)\n                    .join('')}\n            </ol>\n        </td>\n    </tr>\n\n    <!-- Monitoring -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#92400e;\">📈 Monitoring Parameters</h2>\n\n            <ul>\n                ${(d.output?.monitoringParameters || [])\n                    .map(item => `<li>${item}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Flagged Vitals -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#92400e;\">🔍 Flagged Vitals</h2>\n\n            <ul>\n                ${(d.output?.flaggedVitals || [])\n                    .map(item => `<li>${item}</li>`)\n                    .join('')}\n            </ul>\n        </td>\n    </tr>\n\n    <!-- Narrative -->\n    <tr>\n        <td style=\"padding:0 25px 20px;\">\n            <h2 style=\"color:#92400e;\">📝 Clinical Narrative</h2>\n\n            <div style=\"\n                background:#fffbeb;\n                border-left:4px solid #f59e0b;\n                padding:15px;\n                line-height:1.6;\n            \">\n                ${d.output?.clinicalNarrative || 'No narrative available'}\n            </div>\n        </td>\n    </tr>\n\n    <!-- Footer -->\n    <tr>\n        <td style=\"background:#374151;color:#ffffff;padding:25px;\">\n            <h3 style=\"margin-top:0;\">Assessment Information</h3>\n\n            <p><strong>Processing ID:</strong> ${d.processingId}</p>\n            <p><strong>Assessment Time:</strong> ${d.receivedAt}</p>\n            <p><strong>Intervention Window:</strong> ${d.output?.estimatedTimeToIntervention || 'Within 2-4 Hours'}</p>\n\n            <hr style=\"border:none;border-top:1px solid #6b7280;\">\n\n            <p style=\"font-size:12px;color:#d1d5db;\">\n                This patient has been classified as HIGH RISK and should receive timely clinical review to prevent deterioration.\n            </p>\n        </td>\n    </tr>\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    ...d,\n    emailSubject,\n    emailHtml,\n    alertType: 'HIGH',\n    priority: 2,\n    requiresEmail: true,\n    requiresSlack: false,\n    slaMinutes: 60\n  }\n}];"
+      },
+      "id": "878e13ca-7b21-4544-a6f6-a703a851e9aa",
+      "name": "Handle HIGH",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nconst riskScore = d.output?.riskScore || 0;\nconst confidence = Math.round((d.output?.confidence || 0) * 100);\n\nconst emailSubject =\n`🟡 MEDIUM RISK | ${d.patientId} - ${d.patientName} | Enhanced Monitoring Required`;\n\nconst emailHtml = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Medium Risk Patient Alert</title>\n</head>\n\n<body style=\"margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f9;padding:20px;\">\n<tr>\n<td align=\"center\">\n\n<table width=\"700\" cellpadding=\"0\" cellspacing=\"0\"\nstyle=\"max-width:700px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;\">\n\n<tr>\n<td style=\"background:#eab308;padding:30px;text-align:center;color:#ffffff;\">\n<h1 style=\"margin:0;\">🟡 MEDIUM RISK PATIENT ALERT</h1>\n<p style=\"margin-top:10px;\">\nEnhanced Monitoring Recommended\n</p>\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:25px;\">\n\n<table width=\"100%\" cellpadding=\"10\" cellspacing=\"0\">\n\n<tr>\n<td><strong>Patient Name</strong></td>\n<td>${d.patientName}</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><strong>Patient ID</strong></td>\n<td>${d.patientId}</td>\n</tr>\n\n<tr>\n<td><strong>Age / Gender</strong></td>\n<td>${d.age} Years / ${d.gender}</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><strong>Ward</strong></td>\n<td>${d.ward}</td>\n</tr>\n\n<tr>\n<td><strong>Attending Doctor</strong></td>\n<td>${d.attendingDoctor}</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><strong>Risk Level</strong></td>\n<td>\n<span style=\"background:#eab308;color:#ffffff;padding:6px 12px;border-radius:5px;\">\nMEDIUM\n</span>\n</td>\n</tr>\n\n<tr>\n<td><strong>Risk Score</strong></td>\n<td>${riskScore}/100</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><strong>Confidence</strong></td>\n<td>${confidence}%</td>\n</tr>\n\n</table>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#a16207;\">⚠️ Primary Concerns</h2>\n<ul>\n${(d.output?.primaryConcerns || [])\n.map(item => `<li>${item}</li>`)\n.join('')}\n</ul>\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#a16207;\">📋 Clinical Findings</h2>\n<ul>\n${(d.output?.clinicalFindings || [])\n.map(item => `<li>${item}</li>`)\n.join('')}\n</ul>\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#a16207;\">🩺 Recommended Actions</h2>\n<ol>\n${(d.output?.immediateActions || [])\n.map(item => `<li>${item}</li>`)\n.join('')}\n</ol>\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#a16207;\">📈 Monitoring Parameters</h2>\n<ul>\n${(d.output?.monitoringParameters || [])\n.map(item => `<li>${item}</li>`)\n.join('')}\n</ul>\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#a16207;\">📝 Clinical Narrative</h2>\n\n<div style=\"\nbackground:#fefce8;\nborder-left:4px solid #eab308;\npadding:15px;\nline-height:1.6;\n\">\n${d.output?.clinicalNarrative || 'No narrative available'}\n</div>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"background:#374151;color:#ffffff;padding:25px;\">\n\n<h3 style=\"margin-top:0;\">Assessment Information</h3>\n\n<p><strong>Processing ID:</strong> ${d.processingId}</p>\n\n<p><strong>Assessment Time:</strong> ${d.receivedAt}</p>\n\n<p><strong>Intervention Window:</strong>\n${d.output?.estimatedTimeToIntervention || 'Within 4-8 Hours'}\n</p>\n\n<hr style=\"border:none;border-top:1px solid #6b7280;\">\n\n<p style=\"font-size:12px;color:#d1d5db;\">\nPatient condition requires enhanced monitoring and timely clinical review to prevent escalation.\n</p>\n\n</td>\n</tr>\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    ...d,\n    emailSubject,\n    emailHtml,\n    alertType: 'MEDIUM',\n    priority: 3,\n    requiresEmail: true,\n    requiresSlack: true,\n    slaMinutes: 240\n  }\n}];"
+      },
+      "id": "57e1be93-7912-4b1a-84d5-c35aaec2d5ed",
+      "name": "Handle MEDIUM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══ HANDLE LOW ══╗\nconst d = $input.first().json;\n\nreturn [{\n  json: {\n    ...d,\n    alertType:      'LOW',\n    priority:       4,\n    emailSubject:   `[🟢 LOW RISK] ${d.patientId} – ${d.patientName} | Stable | ${d.processingId}`,\n    emailBody:      `Patient ${d.patientName} assessed as LOW RISK (score: ${d.riskScore}/100). Standard monitoring protocol appropriate.`,\n    slackMessage:   null,\n    requiresEmail:  false,\n    requiresSlack:  false,\n    slaMinutes:     null\n  }\n}];"
+      },
+      "id": "280926c9-1ed8-48ad-a7af-addbea8cedb9",
+      "name": "Handle LOW",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst d = $input.first().json;\n\nconst riskScore = d.output?.riskScore || 0;\nconst confidence = Math.round((d.output?.confidence || 0) * 100);\n\nconst emailSubject =\n`🔵 LOW CONFIDENCE ALERT | ${d.patientId} - ${d.patientName} | Manual Review Required`;\n\nconst emailHtml = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Low Confidence AI Alert</title>\n</head>\n\n<body style=\"margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f4f6f9;padding:20px;\">\n<tr>\n<td align=\"center\">\n\n<table width=\"700\" cellpadding=\"0\" cellspacing=\"0\"\nstyle=\"max-width:700px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #dbeafe;\">\n\n<tr>\n<td style=\"background:#2563eb;color:#ffffff;padding:30px;text-align:center;\">\n<h1 style=\"margin:0;\">🔵 LOW CONFIDENCE AI ALERT</h1>\n<p style=\"margin-top:10px;\">\nManual Clinical Review Required\n</p>\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:25px;\">\n\n<table width=\"100%\" cellpadding=\"10\" cellspacing=\"0\">\n\n<tr>\n<td><strong>Patient Name</strong></td>\n<td>${d.patientName}</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><strong>Patient ID</strong></td>\n<td>${d.patientId}</td>\n</tr>\n\n<tr>\n<td><strong>Ward</strong></td>\n<td>${d.ward}</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><strong>Attending Doctor</strong></td>\n<td>${d.attendingDoctor}</td>\n</tr>\n\n<tr>\n<td><strong>AI Risk Score</strong></td>\n<td>${riskScore}/100</td>\n</tr>\n\n<tr style=\"background:#f9fafb;\">\n<td><strong>AI Confidence</strong></td>\n<td>\n<span style=\"background:#2563eb;color:white;padding:6px 12px;border-radius:5px;\">\n${confidence}%\n</span>\n</td>\n</tr>\n\n<tr>\n<td><strong>AI Suggested Risk</strong></td>\n<td>${d.output?.riskLevel || 'Unknown'}</td>\n</tr>\n\n</table>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#1d4ed8;\">⚠️ Reason For Alert</h2>\n\n<div style=\"\nbackground:#eff6ff;\nborder-left:4px solid #2563eb;\npadding:15px;\nline-height:1.7;\n\">\nThe AI model confidence score fell below the approved threshold of 65%.\nClinical recommendations may be incomplete or unreliable.\nA qualified healthcare professional should review this patient manually.\n</div>\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#1d4ed8;\">📋 Available Clinical Findings</h2>\n\n<ul>\n${(d.output?.clinicalFindings || [])\n.map(item => `<li>${item}</li>`)\n.join('')}\n</ul>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#1d4ed8;\">⚠️ AI Primary Concerns</h2>\n\n<ul>\n${(d.output?.primaryConcerns || [])\n.map(item => `<li>${item}</li>`)\n.join('')}\n</ul>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#1d4ed8;\">🩺 Suggested Next Steps</h2>\n\n<ol>\n<li>Perform manual clinical assessment.</li>\n<li>Verify patient symptoms and medical history.</li>\n<li>Collect missing vital signs and laboratory results.</li>\n<li>Re-run AI assessment after obtaining complete data.</li>\n<li>Escalate if patient condition deteriorates.</li>\n</ol>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"padding:0 25px 20px;\">\n<h2 style=\"color:#1d4ed8;\">📝 AI Clinical Narrative</h2>\n\n<div style=\"\nbackground:#f8fafc;\npadding:15px;\nborder-left:4px solid #2563eb;\nline-height:1.6;\n\">\n${d.output?.clinicalNarrative || 'No narrative available'}\n</div>\n\n</td>\n</tr>\n\n<tr>\n<td style=\"background:#1e293b;color:white;padding:25px;\">\n\n<h3 style=\"margin-top:0;\">Alert Information</h3>\n\n<p><strong>Processing ID:</strong> ${d.processingId}</p>\n\n<p><strong>Workflow Version:</strong> ${d.workflowVersion}</p>\n\n<p><strong>Assessment Time:</strong> ${d.receivedAt}</p>\n\n<p><strong>Confidence Threshold:</strong> 65%</p>\n\n<hr style=\"border:none;border-top:1px solid #475569;\">\n\n<p style=\"font-size:12px;color:#cbd5e1;\">\nThis alert was generated because the AI confidence score was below the accepted threshold.\nClinical decisions should not rely solely on this assessment.\n</p>\n\n</td>\n</tr>\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>\n`;\n\nconst slackMessage = `\n🔵 *LOW CONFIDENCE AI ALERT*\n\n*Patient:* ${d.patientName}\n*Patient ID:* ${d.patientId}\n*Ward:* ${d.ward}\n\n📊 AI Risk Score: ${riskScore}/100\n🎯 AI Confidence: ${confidence}%\n\n⚠️ Confidence below threshold (65%)\n\n👨‍⚕️ Manual clinical review required\n\nSuggested AI Risk:\n${d.output?.riskLevel || 'Unknown'}\n\nProcessing ID:\n${d.processingId}\n`;\n\nreturn [{\n  json: {\n    ...d,\n    emailSubject,\n    emailHtml,\n    slackMessage,\n    alertType: 'LOW_CONF',\n    priority: 2,\n    requiresEmail: true,\n    requiresSlack: false,\n    slaMinutes: 120\n  }\n}];\n\n"
+      },
+      "id": "8a4d9972-aca4-4484-9c9b-714ad5d0add1",
+      "name": "Handle LOW CONFIDENCE",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3984,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══ HANDLE ERROR ══╗\nconst d = $input.first().json;\n\nconst emailSubject = `[⚫ ERROR] AI Assessment Failed – ${d.patientId || 'Unknown'} | Manual Review Required`;\n\nconst emailBody = [\n  '╔══════════════════════════════════════════════════╗',\n  '║       ⚫  AI ASSESSMENT ERROR — ACTION NEEDED    ║',\n  '╚══════════════════════════════════════════════════╝',\n  '',\n  `  Patient ID:   ${d.patientId || 'Unknown'}`,\n  `  Patient Name: ${d.patientName || 'Unknown'}`,\n  `  Ward:         ${d.ward || 'Unknown'}`,\n  '',\n  '  ⚠️  The AI risk assessment could not be completed.',\n  '  IMMEDIATE manual clinical review is required.',\n  '',\n  `  Error Details: ${d.parseError || 'Unknown error'}`,\n  `  Processing ID: ${d.processingId || 'N/A'}`,\n  `  Time:          ${new Date().toISOString()}`,\n  '══════════════════════════════════════════════════',\n].join('\\n');\n\nreturn [{\n  json: {\n    ...d,\n    alertType:      'ERROR',\n    priority:       1,\n    emailSubject,\n    emailBody,\n    slackMessage:   null,\n    requiresEmail:  true,\n    requiresSlack:  false,\n    slaMinutes:     30\n  }\n}];"
+      },
+      "id": "de4158b0-d06f-4870-8ddc-22c75d922cd9",
+      "name": "Handle ERROR",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3984,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "=drmaqdoomfarooqui@gmail.com",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7d18f891-fb93-470e-8c60-887118b3234d",
+      "name": "Send CRITICAL Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        4976,
+        272
+      ],
+      "webhookId": "335bc836-5040-4659-97c0-0cfcdb960388",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bhjRu6xCPnHDoEJe",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.notifyEmails }}",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a70777d0-ca21-4f8d-addd-b8402f1e84b6",
+      "name": "Send HIGH Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        4704,
+        416
+      ],
+      "webhookId": "a89263bd-7a5f-47bc-a558-03ce3730207a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bhjRu6xCPnHDoEJe",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "=rdzala30@gmail.com",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "185349b4-a199-4970-a11b-21572dbf2ad5",
+      "name": "Send MEDIUM Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        4704,
+        592
+      ],
+      "webhookId": "9edfd9e7-3e63-4ef2-8377-5143bb6bec63",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bhjRu6xCPnHDoEJe",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "=rdzala30@gmail.com",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "b932ef2d-9441-4913-89b3-67a361d909ca",
+      "name": "Send LOW CONF Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        4160,
+        928
+      ],
+      "webhookId": "b84c7204-2b8c-45fa-ba8e-b63c25f79c17",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bhjRu6xCPnHDoEJe",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.notifyEmails }}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailType": "text",
+        "message": "={{ $json.emailBody }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "1a9d8c43-1699-4423-86b9-93c0bddc3b7f",
+      "name": "Send ERROR Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        4160,
+        1136
+      ],
+      "webhookId": "84b2d633-47fe-42da-8a0b-d3cce7c75529",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bhjRu6xCPnHDoEJe",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════╗\n// ║              AUDIT LOGGER                    ║\n// ╚══════════════════════════════════════════════╝\n\nconst d =$('Merge').first().json;\n\n// AI assessment data\nconst ai = d.output || {};\n\n// Calculate processing time\nconst processingMs =\n  d.receivedAt\n    ? (new Date().getTime() - new Date(d.receivedAt).getTime())\n    : null;\n\n// Structured audit record\nconst auditRecord = {\n\n  // ==========================================\n  // IDENTIFIERS\n  // ==========================================\n  processingId: d.processingId,\n  patientId: d.patientId,\n  patientName: d.patientName,\n  ward: d.ward,\n  department: d.departmentInfo?.dept || null,\n\n  // ==========================================\n  // RISK ASSESSMENT\n  // ==========================================\n  riskLevel: ai.riskLevel,\n  riskScore: ai.riskScore,\n  confidence: ai.confidence,\n\n  alertType: d.alertType || ai.riskLevel,\n\n  // ==========================================\n  // TIMESTAMPS\n  // ==========================================\n  receivedAt: d.receivedAt,\n  enrichedAt: d.enrichedAt,\n  auditLoggedAt: new Date().toISOString(),\n  processingMs,\n\n  // ==========================================\n  // CLINICAL SUMMARY\n  // ==========================================\n  ageRiskCategory: d.ageRiskCategory,\n  preAssessmentRisk: d.preAssessmentRisk,\n\n  primaryConcerns:\n    (ai.primaryConcerns || [])\n      .slice(0, 3)\n      .join(' | '),\n\n  topAction:\n    (ai.immediateActions || [])[0] || null,\n\n  criticalVitalFlags:\n    (d.criticalVitalFlags || [])\n      .join(' | '),\n\n  symptoms:\n    (d.symptoms || [])\n      .join(' | '),\n\n  // ==========================================\n  // NOTIFICATION STATUS\n  // ==========================================\n  emailSent: d.requiresEmail || false,\n  slackSent: d.requiresSlack || false,\n\n  escalationLevel: d.escalationLevel,\n  slaMinutes: d.slaMinutes,\n\n  // ==========================================\n  // WORKFLOW\n  // ==========================================\n  workflowVersion: d.workflowVersion,\n  validationStatus: d.validationStatus,\n\n  // ==========================================\n  // ERROR HANDLING\n  // ==========================================\n  parseError: d.parseError || null\n};\n\n// Store last 100 audits in workflow memory\nconst staticData = $getWorkflowStaticData('global');\n\nif (!staticData.auditLog) {\n  staticData.auditLog = [];\n}\n\nstaticData.auditLog.unshift(auditRecord);\n\nif (staticData.auditLog.length > 100) {\n  staticData.auditLog = staticData.auditLog.slice(0, 100);\n}\n\n// Return original payload + audit info\nreturn [\n  {\n    json: {\n      ...d,\n      auditRecord,\n      auditLogged: true\n    }\n  }\n];"
+      },
+      "id": "d28a00ec-274d-4c02-821d-5cad46411cf4",
+      "name": "Audit Logger",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5392,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "cd085c10-2552-4e06-90fa-fabb62c54388",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        6000,
+        560
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "213a7db2-b7db-4c09-adb4-e157d64433f9",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        704,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════╗\n// ║   FORMAT ERROR REPORT — Zone 7              ║\n// ╚══════════════════════════════════════════════╝\nconst err = $input.first().json;\n\nconst subject = `[🔴 WORKFLOW ERROR] Health Risk Monitor — ${err.execution?.id || 'Unknown Execution'}`;\n\nconst body = [\n  '╔══════════════════════════════════════════════════╗',\n  '║    🔴  WORKFLOW ERROR — IMMEDIATE ATTENTION     ║',\n  '╚══════════════════════════════════════════════════╝',\n  '',\n  `  Workflow:      ${err.workflow?.name || 'AI Patient Risk Monitoring System'}`,\n  `  Execution ID:  ${err.execution?.id || 'N/A'}`,\n  `  Failed Node:   ${err.execution?.lastNodeExecuted || 'Unknown'}`,\n  `  Error:         ${err.execution?.error?.message || 'Unknown error'}`,\n  `  Stack:         ${err.execution?.error?.stack?.substring(0, 300) || 'N/A'}`,\n  `  Timestamp:     ${new Date().toISOString()}`,\n  '',\n  '  ⚠️  A patient risk assessment workflow has failed.',\n  '  Manual clinical review of any pending patients is required.',\n  '',\n  '  Please check the n8n execution logs for full details.',\n  '══════════════════════════════════════════════════',\n].join('\\n');\n\nreturn [{\n  json: {\n    errorReportSubject: subject,\n    errorReportBody:    body,\n    errorContext:       err,\n    reportedAt:         new Date().toISOString()\n  }\n}];"
+      },
+      "id": "afe1ec51-7080-4870-b0f0-e28303985207",
+      "name": "Format Error Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "maazahmed7676@gmail.com",
+        "subject": "={{ $json.errorReportSubject }}",
+        "emailType": "text",
+        "message": "={{ $json.errorReportBody }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "d63ec720-2235-4eb6-9fc3-e408640b80f2",
+      "name": "Send Error Alert Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        1408
+      ],
+      "webhookId": "c3b81a1c-2097-49d1-b3a8-8520d582ce3d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bhjRu6xCPnHDoEJe",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.aiPrompt }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "={{ JSON.stringify({ \"model\": \"llama-3.1-8b-instant\", \"max_tokens\": 2000, \"temperature\": 0.1, \"response_format\": { \"type\": \"json_object\" }, \"messages\": [{ \"role\": \"system\", \"content\": \"You are a clinical AI risk assessment engine. Respond ONLY with valid JSON matching the exact schema requested. No markdown, no explanation.\" }, { \"role\": \"user\", \"content\": $json.aiPrompt }] }) }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2272,
+        656
+      ],
+      "id": "8512cea5-218f-4090-923a-f30feda8b037",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"riskLevel\": \"LOW\",\n  \"riskScore\": 12,\n  \"confidence\": 0.92,\n  \"primaryConcerns\": [\n    \"Mild headache - likely benign etiology\"\n  ],\n  \"clinicalFindings\": [\n    \"All vital signs within normal limits\"\n  ],\n  \"immediateActions\": [\n    \"Continue standard monitoring\"\n  ],\n  \"monitoringParameters\": [\n    \"Heart rate\",\n    \"Oxygen saturation\",\n    \"Temperature\"\n  ],\n  \"estimatedTimeToIntervention\": \"Not applicable - stable condition\",\n  \"clinicalNarrative\": \"Patient is stable with normal vital signs and low clinical risk.\",\n  \"flaggedVitals\": [],\n  \"differentialConsiderations\": [\n    \"Tension headache\",\n    \"Migraine\"\n  ],\n  \"recommendedSpecialties\": [\n    \"General Medicine\"\n  ],\n  \"medicationAlerts\": [\n    \"No contraindications identified\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2416,
+        864
+      ],
+      "id": "eb8e2de4-77a3-4c73-9710-10fa9a4a2e88",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ef87bc66-a050-449c-892b-a0cf2ee93bbf",
+                    "leftValue": "={{ $json.output.riskLevel }}",
+                    "rightValue": "CRITICAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.riskLevel }}",
+                    "rightValue": "HIGH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "de86e0a5-b4c6-4467-96a0-f0805a08b219"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "db230812-efc7-41e9-8037-a4f5219923ea",
+                    "leftValue": "={{ $json.output.riskLevel }}",
+                    "rightValue": "MEDIUM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3f152819-5535-4d2c-b0d8-666ccb8744f3",
+                    "leftValue": "={{ $json.output.riskLevel }}",
+                    "rightValue": "LOW",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3568,
+        480
+      ],
+      "id": "616b8f3a-0fed-4365-9c2e-b9b2c1f7752e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2736,
+        480
+      ],
+      "id": "ac2c8127-c344-4c2f-b576-d90a30b238e7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BKUT3N28K",
+          "mode": "list",
+          "cachedResultName": "n8n-hospital-project"
+        },
+        "text": "={{ $json.slackMessage }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        4704,
+        272
+      ],
+      "id": "c33fd845-daff-4739-99f5-7bc7413e2cd3",
+      "name": "Send a message",
+      "webhookId": "50db751e-6abd-4b6f-b73e-dfc80092128b",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "wkZ8gPOkVxeM89k2",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle OpenAI API hard failure (all 3 retries exhausted)\nconst d = $input.first().json;\nconst errMsg = d.message || d.error?.message || 'OpenAI API unreachable after 3 retries';\nreturn [{\n  json: {\n    ...d,\n    riskLevel: 'ERROR',\n    riskScore: 0,\n    confidence: 0,\n    primaryConcerns: ['AI assessment system unreachable'],\n    clinicalFindings: [],\n    immediateActions: ['URGENT: Manual clinical review required immediately', 'Contact on-call physician for ' + (d.patientName || 'patient')],\n    monitoringParameters: [],\n    estimatedTimeToIntervention: 'immediate',\n    clinicalNarrative: 'Automated AI assessment failed (API error). Immediate manual review required.',\n    flaggedVitals: [],\n    differentialConsiderations: [],\n    recommendedSpecialties: [],\n    medicationAlerts: [],\n    assessedAt: new Date().toISOString(),\n    parseError: 'OpenAI API Error: ' + errMsg,\n    aiModelUsed: 'N/A - API failure',\n    openAiTokensUsed: 0\n  }\n}];"
+      },
+      "id": "d1da15b3-0f9e-46db-b9e0-ad7e342c2c05",
+      "name": "Handle AI Response Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1oOqtAyvZ-1YKDDf3icDwzOt1rVwfoedD45j0dCJvFLI",
+          "mode": "list",
+          "cachedResultName": "n8n Hospital Project",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1oOqtAyvZ-1YKDDf3icDwzOt1rVwfoedD45j0dCJvFLI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1oOqtAyvZ-1YKDDf3icDwzOt1rVwfoedD45j0dCJvFLI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Patient ID": "={{ $json.patientId }}",
+            "Patient Name": "={{ $json.patientName }}",
+            "Ward": "={{ $json.ward }}",
+            "Age ": "={{ $json.age }}",
+            "Gender": "={{ $json.gender }}",
+            "Processing ID": "={{ $json.auditRecord.processingId }}",
+            "Doctor": "={{ $json.attendingDoctor }}",
+            "Risk Level": "={{ $json.output.riskLevel }}",
+            "Risk Score": "={{ $json.output.riskScore }}",
+            "Confidence": "={{ $json.output.confidence }}",
+            "Alert Type": "={{ $json.auditRecord.alertType }}",
+            "Parse Error": "={{ $json.auditRecord.parseError }}"
+          },
+          "matchingColumns": [
+            "Processing ID"
+          ],
+          "schema": [
+            {
+              "id": "Processing ID",
+              "displayName": "Processing ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Patient ID",
+              "displayName": "Patient ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Patient Name",
+              "displayName": "Patient Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ward",
+              "displayName": "Ward",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Age ",
+              "displayName": "Age ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Doctor",
+              "displayName": "Doctor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Risk Level",
+              "displayName": "Risk Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Risk Score",
+              "displayName": "Risk Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Alert Type",
+              "displayName": "Alert Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Parse Error",
+              "displayName": "Parse Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5680,
+        560
+      ],
+      "id": "eaf02dc0-1e00-41b6-a089-3271ec54910e",
+      "name": "Update & Append Data into Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vPj69tJixXm3KNKz",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Update & Append Data into Sheet"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sd = $getWorkflowStaticData('global');\n\nconst patientId =\n  $json.body?.patientId ??\n  $json.patientId ??\n  'unknown';\n\nconst key = `rl_${patientId}`;\n\nconst now = Date.now();\nconst tenMinutes = 10 * 60 * 1000;\n\nlet allowed = true;\n\nif (sd[key] && (now - sd[key]) < tenMinutes) {\n  allowed = false;\n}\n\nsd[key] = now;\n\nreturn [{\n  json: {\n    ...$json,\n    allowed\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        608
+      ],
+      "id": "4ea40dc4-99fa-4484-a452-31553da5609c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        864
+      ],
+      "id": "631132cc-dbea-43cf-a332-9f7fdea6a5f9",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "w1BPvriEVxfE0cYt",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Patient Data Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit & Dedup Check": {
+      "main": [
+        [
+          {
+            "node": "Validate and Sanitize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Rate Limited Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Rate Limited Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Rate Limited",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and Sanitize": {
+      "main": [
+        [
+          {
+            "node": "Enrich with Clinical Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich with Clinical Context": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Prompt": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence Gate": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle LOW CONFIDENCE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle CRITICAL": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send CRITICAL Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send CRITICAL Email": {
+      "main": [
+        [
+          {
+            "node": "Audit Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle HIGH": {
+      "main": [
+        [
+          {
+            "node": "Send HIGH Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send HIGH Email": {
+      "main": [
+        [
+          {
+            "node": "Audit Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle MEDIUM": {
+      "main": [
+        [
+          {
+            "node": "Send MEDIUM Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send MEDIUM Email": {
+      "main": [
+        [
+          {
+            "node": "Audit Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle LOW": {
+      "main": [
+        [
+          {
+            "node": "Audit Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle LOW CONFIDENCE": {
+      "main": [
+        [
+          {
+            "node": "Send LOW CONF Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send LOW CONF Email": {
+      "main": [
+        [
+          {
+            "node": "Audit Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle ERROR": {
+      "main": [
+        [
+          {
+            "node": "Send ERROR Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send ERROR Email": {
+      "main": [
+        [
+          {
+            "node": "Audit Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit Logger": {
+      "main": [
+        [
+          {
+            "node": "Update & Append Data into Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Error Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Report": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Handle AI Response Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Handle CRITICAL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle HIGH",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle MEDIUM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle LOW",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Confidence Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Audit Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle AI Response Error": {
+      "main": [
+        [
+          {
+            "node": "Handle ERROR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update & Append Data into Sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit & Dedup Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c6fc6614-f6f0-41d5-8283-c83bc445a0fb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e798d200d8b98dcff6d8f8c3e8cb6bb69237937f3f96f41a4e864c842ed9284a"
+  },
+  "nodeGroups": [],
+  "id": "3gcrenCOIRGdePC0",
+  "tags": [
+    {
+      "updatedAt": "2026-07-27T06:41:31.937Z",
+      "createdAt": "2026-07-27T06:41:31.937Z",
+      "id": "4CL6eqVVxlF4V9dU",
+      "name": "Monitoring"
+    },
+    {
+      "updatedAt": "2026-07-27T06:41:31.985Z",
+      "createdAt": "2026-07-27T06:41:31.985Z",
+      "id": "4pW3m7GBTAy7bhke",
+      "name": "Production-Ready"
+    },
+    {
+      "updatedAt": "2026-07-27T06:41:31.902Z",
+      "createdAt": "2026-07-27T06:41:31.902Z",
+      "id": "nY4QztozVWE9Vad3",
+      "name": "AI"
+    },
+    {
+      "updatedAt": "2026-07-27T06:41:31.964Z",
+      "createdAt": "2026-07-27T06:41:31.964Z",
+      "id": "s1tZB7MPSk5yNFuW",
+      "name": "Healthcare"
+    }
+  ]
+}
